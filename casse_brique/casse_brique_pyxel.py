@@ -7,7 +7,7 @@ SPEED = 5
 NB_COLONNE = 10
 NB_LIGNES = 3
 SOLIDITE = 3
-ESPACEMENT = 5
+ESPACEMENT = 0
 BRICK_WIDTH = 50
 BRICK_HEIGHT = 25
 WIDTH = (BRICK_WIDTH + ESPACEMENT) * NB_COLONNE
@@ -30,9 +30,11 @@ class App:
 
         self.ball_x = WIDTH//2
         self.ball_y = HEIGHT//2
-        self.ball_vx = SPEED
+        self.ball_vx = 0
         self.ball_vy = SPEED
         self.ball_r = BALL_RADIUS
+
+        self.perdu = False
 
         self.racket_x = WIDTH//2
 
@@ -40,6 +42,19 @@ class App:
         pyxel.run(self.update, self.draw)
 
     def update(self):
+        if self.perdu and pyxel.btnp(pyxel.KEY_SPACE):
+            self.perdu = False
+            self.ball_x = WIDTH//2
+            self.ball_y = HEIGHT//2
+            self.ball_vx = 0
+            self.ball_vy = SPEED
+            self.casse_briques = CasseBriques()
+            
+            for ligne in range(2, 6):
+                self.casse_briques.construire_rangee_briques(BRICK_WIDTH, BRICK_HEIGHT, 4, 10, NB_COLONNE, ESPACEMENT, ligne)
+
+            
+
         if pyxel.btn(pyxel.KEY_LEFT):
             self.racket_x = max(self.racket_x - RACKET_SPEED, 0)
         if pyxel.btn(pyxel.KEY_RIGHT):
@@ -51,9 +66,11 @@ class App:
         self.ball_y += self.ball_vy
         if self.ball_x - self.ball_r <= 0 or self.ball_x + self.ball_r >= WIDTH:
             self.ball_vx *= -1
-        if self.ball_y - self.ball_r <= 0 or self.ball_y + self.ball_r >= HEIGHT:
+        if self.ball_y - self.ball_r <= 0:
             self.ball_vy *= -1
 
+        if self.ball_y > HEIGHT:
+            self.perdu = True
 
         brique_touchee = self.casse_briques.impact_brique(self.ball_x, self.ball_y)
         if brique_touchee != None:
@@ -74,8 +91,11 @@ class App:
         pyxel.circ(self.ball_x, self.ball_y, self.ball_r, BALL_COLOR)
         for b in self.casse_briques.briques:
             x1, y1, x2, y2 = b.get_limits()
-            pyxel.rect(x1, y1, x2-x1, y2-y1, 12 - b.solidite)
+            pyxel.rect(x1+2, y1+2, x2-x1-4, y2-y1-4, 12 - b.solidite)
         pyxel.rect(self.racket_x, RACKET_Y, RACKET_WIDTH, 10, 12)
+
+        if self.perdu:
+            pyxel.text(WIDTH//2, HEIGHT//2, "PERDU", 7)
 
 
     
